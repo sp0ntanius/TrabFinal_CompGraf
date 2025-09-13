@@ -9,6 +9,7 @@ from algoritmos.preenchimento import recursive_fill
 from algoritmos.recorte import cohen_sutherland_clip
 from algoritmos.recorte_poligono import sutherland_hodgman_clip
 from algoritmos.transformacoes import translacao, rotacao, escala
+from algoritmos.projecao_ortogonal_perspectiva import projecao_ortogonal, projecao_perspectiva
 
 
 class App(tk.Tk):
@@ -53,6 +54,7 @@ class App(tk.Tk):
         self._create_clipping_controls(control_frame)
         self._create_polygon_clipping_controls(control_frame)
         self._create_transform_controls(control_frame)
+        self._create_projection_controls(control_frame)
 
         ttk.Button(control_frame, text="Limpar Tela", command=self.clear_canvas).pack(pady=20, fill='x')
 
@@ -181,6 +183,38 @@ class App(tk.Tk):
         self.scale_entry.pack(fill='x')
         self.scale_entry.insert(0, "1,2,0,-50")
         ttk.Button(frame, text="Aplicar Escala", command=self.apply_scale).pack(pady=2, fill='x')
+
+    def _create_projection_controls(self, parent):
+        frame = ttk.LabelFrame(parent, text="Projeções 3D", padding=10)
+        frame.pack(fill='x', pady=5)
+
+        # Vértices do sólido 3D
+        ttk.Label(frame, text="Vértices 3D: (x,y,z), ...").pack(anchor='w')
+        self.proj_vertices_entry = ttk.Entry(frame)
+        self.proj_vertices_entry.pack(fill='x')
+        # Exemplo de cubo
+        self.proj_vertices_entry.insert(0, "(-30,-30,-30), (30,-30,-30), (30,30,-30), (-30,30,-30), (-30,-30,30), (30,-30,30), (30,30,30), (-30,30,30)")
+
+        # Arestas do sólido (pares de índices dos vértices)
+        ttk.Label(frame, text="Arestas: (i1,i2), ...").pack(anchor='w')
+        self.proj_edges_entry = ttk.Entry(frame)
+        self.proj_edges_entry.pack(fill='x')
+        # Exemplo de cubo
+        self.proj_edges_entry.insert(0, "(0,1), (1,2), (2,3), (3,0), (4,5), (5,6), (6,7), (7,4), (0,4), (1,5), (2,6), (3,7)")
+
+        # Projeção ortogonal
+        ttk.Label(frame, text="Eixo para projeção ortogonal (x, y ou z)").pack(anchor='w')
+        self.proj_eixo_entry = ttk.Entry(frame)
+        self.proj_eixo_entry.pack(fill='x')
+        self.proj_eixo_entry.insert(0, "z")
+        ttk.Button(frame, text="Projeção Ortogonal", command=self.apply_ortogonal_projection).pack(pady=2, fill='x')
+
+        # Projeção perspectiva
+        ttk.Label(frame, text="Distância d para perspectiva").pack(anchor='w')
+        self.proj_d_entry = ttk.Entry(frame)
+        self.proj_d_entry.pack(fill='x')
+        self.proj_d_entry.insert(0, "200")
+        ttk.Button(frame, text="Projeção Perspectiva", command=self.apply_perspective_projection).pack(pady=2, fill='x')
 
     def draw_pixel(self, x, y, color="black"):
         """Desenha um 'pixel' e o adiciona ao set de pixels desenhados."""
@@ -383,3 +417,45 @@ class App(tk.Tk):
         new_vertices = escala(vertices, sx, sy, (fx, fy))
         for x, y in draw_polyline(new_vertices + [new_vertices[0]]):
             self.draw_pixel(x, y, color="green")
+
+    def _parse_vertices_3d(self, entry):
+        text = entry.get()
+        points_str = re.findall(r'\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)', text)
+        return [(float(x), float(y), float(z)) for x, y, z in points_str]
+
+    def _parse_edges(self, entry):
+        text = entry.get()
+        edges_str = re.findall(r'\(\s*(\d+)\s*,\s*(\d+)\s*\)', text)
+        return [(int(i1), int(i2)) for i1, i2 in edges_str]
+
+    def apply_ortogonal_projection(self):
+        try:
+            vertices_3d = self._parse_vertices_3d(self.proj_vertices_entry)
+            edges = self._parse_edges(self.proj_edges_entry)
+            eixo = self.proj_eixo_entry.get().strip().lower()
+            vertices_2d = projecao_ortogonal(vertices_3d, eixo)
+        except Exception:
+            messagebox.showerror("Erro", "Verifique os valores de entrada para projeção ortogonal.")
+            return
+        self.clear_canvas()
+        # Desenha as arestas projetadas
+        for i1, i2 in edges:
+            pts = bresenham_line(vertices_2d[i1][0], vertices_2d[i1][1], vertices_2d[i2][0], vertices_2d[i2][1])
+            for x, y in pts:
+                self.draw_pixel(x, y, color="red")
+
+    def apply_perspective_projection(self):
+        try:
+            vertices_3d = self._parse_vertices_3d(self.proj_vertices_entry)
+            edges = self._parse_edges(self.proj_edges_entry)
+            d = float(self.proj_d_entry.get())
+            vertices_2d = projecao_perspectiva(vertices_3d, d)
+        except Exception:
+            messagebox.showerror("Erro", "Verifique os valores de entrada para projeção perspectiva.")
+            return
+        self.clear_canvas()
+        # Desenha as arestas projetadas
+        for i1, i2 in edges:
+            pts = bresenham_line(vertices_2d[i1][0], vertices_2d[i1][1], vertices_2d[i2][0], vertices_2d[i2][1])
+            for x, y in pts:
+                self.draw_pixel(x, y, color="blue")
