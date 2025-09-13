@@ -58,31 +58,71 @@ class App(tk.Tk):
 
         ttk.Button(control_frame, text="Limpar Tela", command=self.clear_canvas).pack(pady=20, fill='x')
 
+    # gui/main_window.py
+
     def _create_bresenham_controls(self, parent):
         frame = ttk.LabelFrame(parent, text="Bresenham (Linha)", padding=10)
         frame.pack(fill='x', pady=5)
-        
+
+        # Configura o frame para expandir as colunas adequadamente
+        for i in range(9):  # 9 colunas no total
+            frame.columnconfigure(i, weight=1)
+
         self.bresenham_entries = {}
-        for label_text in ["X0", "Y0", "X1", "Y1"]:
-            ttk.Label(frame, text=label_text).pack(side='left', padx=5)
-            entry = ttk.Entry(frame, width=5)
-            entry.pack(side='left')
-            self.bresenham_entries[label_text] = entry
-        
-        ttk.Button(frame, text="Desenhar", command=self.draw_bresenham_line).pack(side='left', padx=10)
+
+        # --- Colunas 0 e 1: X0 ---
+        ttk.Label(frame, text="X0").grid(row=0, column=0, padx=(0, 2), sticky='e')
+        entry_x0 = ttk.Entry(frame, width=5)
+        entry_x0.grid(row=0, column=1, sticky='w')
+        self.bresenham_entries["X0"] = entry_x0
+
+        # --- Colunas 2 e 3: Y0 ---
+        ttk.Label(frame, text="Y0").grid(row=0, column=2, padx=(5, 2), sticky='e')
+        entry_y0 = ttk.Entry(frame, width=5)
+        entry_y0.grid(row=0, column=3, sticky='w')
+        self.bresenham_entries["Y0"] = entry_y0
+
+        # --- Colunas 4 e 5: X1 ---
+        ttk.Label(frame, text="X1").grid(row=0, column=4, padx=(5, 2), sticky='e')
+        entry_x1 = ttk.Entry(frame, width=5)
+        entry_x1.grid(row=0, column=5, sticky='w')
+        self.bresenham_entries["X1"] = entry_x1
+
+        # --- Colunas 6 e 7: Y1 ---
+        ttk.Label(frame, text="Y1").grid(row=0, column=6, padx=(5, 2), sticky='e')
+        entry_y1 = ttk.Entry(frame, width=5)
+        entry_y1.grid(row=0, column=7, sticky='w')
+        self.bresenham_entries["Y1"] = entry_y1
+
+        # --- Coluna 8: Botão ---
+        ttk.Button(frame, text="Desenhar", command=self.draw_bresenham_line).grid(row=0, column=8, padx=(10, 0), sticky='ew')
 
     def _create_circle_controls(self, parent):
         frame = ttk.LabelFrame(parent, text="Círculo", padding=10)
         frame.pack(fill='x', pady=5)
 
         self.circle_entries = {}
-        for label_text in ["Xc", "Yc", "Raio"]:
-            ttk.Label(frame, text=label_text).pack(side='left', padx=5)
-            entry = ttk.Entry(frame, width=5)
-            entry.pack(side='left')
-            self.circle_entries[label_text] = entry
 
-        ttk.Button(frame, text="Desenhar", command=self.draw_circle).pack(side='left', padx=10)
+        # --- Coluna 0 e 1: Xc ---
+        ttk.Label(frame, text="Xc").grid(row=0, column=0, padx=(0, 2))
+        entry_xc = ttk.Entry(frame, width=5)
+        entry_xc.grid(row=0, column=1)
+        self.circle_entries["Xc"] = entry_xc
+
+        # --- Coluna 2 e 3: Yc ---
+        ttk.Label(frame, text="Yc").grid(row=0, column=2, padx=(5, 2))
+        entry_yc = ttk.Entry(frame, width=5)
+        entry_yc.grid(row=0, column=3)
+        self.circle_entries["Yc"] = entry_yc
+
+        # --- Coluna 4 e 5: Raio ---
+        ttk.Label(frame, text="Raio").grid(row=0, column=4, padx=(5, 2))
+        entry_raio = ttk.Entry(frame, width=5)
+        entry_raio.grid(row=0, column=5)
+        self.circle_entries["Raio"] = entry_raio
+
+        # --- Coluna 6: Botão ---
+        ttk.Button(frame, text="Desenhar", command=self.draw_circle).grid(row=0, column=6, padx=(10, 0))
         
     def _create_curve_controls(self, parent):
         frame = ttk.LabelFrame(parent, text="Curva de Bézier", padding=10)
